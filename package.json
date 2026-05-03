@@ -1,0 +1,15 @@
+{
+  "name": "workflow-os",
+  "version": "1.0.0",
+  "description": "Workflow OS — Electron + React + Spring Boot + PostgreSQL",
+  "private": true,
+  "scripts": {
+    "start": "bash start.sh",
+    "stop":  "bash stop.sh",
+    "logs":  "docker compose logs -f",
+    "ps":    "docker compose ps"
+  },
+  "keywords": ["electron", "react", "spring-boot", "postgresql"],
+  "author": "Workflow OS",
+  "license": "MIT"
+}
