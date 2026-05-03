@@ -106,7 +106,7 @@ STEP 5 — DEVELOPMENT WORKFLOW
     → Use it for React debugging, network inspection, and console logs.
 
 ────────────────────────────────────────────────────────────────────────────────
-STEP 6 — PRODUCTION BUILD (optional)
+STEP 6 — OPTION A: PRODUCTION BUILD (manual)
 ────────────────────────────────────────────────────────────────────────────────
 
   Build the Spring Boot JAR:
@@ -122,22 +122,94 @@ STEP 6 — PRODUCTION BUILD (optional)
     → The .app bundles React + Electron and connects to the backend at startup.
 
 ────────────────────────────────────────────────────────────────────────────────
+STEP 7 — OPTION B: DOCKER MODE (recommended for full stack)
+────────────────────────────────────────────────────────────────────────────────
+
+  Prerequisites for Docker mode:
+    → Docker Desktop for Mac: https://www.docker.com/products/docker-desktop
+    → Check: docker -v && docker compose version
+
+  ── Setup environment ─────────────────────────────────────────────────────
+
+    cp .env.example .env
+    # Edit .env to set a secure POSTGRES_PASSWORD (optional for local dev)
+
+  ── Start all services ────────────────────────────────────────────────────
+
+    docker compose up --build
+
+    What this does (startup order):
+      1. Pulls/builds the postgres:16-alpine image → starts PostgreSQL
+         PostgreSQL healthcheck passes (pg_isready)
+      2. Builds the Spring Boot image (Maven multi-stage build) → starts backend
+         Spring Boot runs schema.sql + data.sql automatically on first boot
+         Backend healthcheck passes (/actuator/health returns UP)
+      3. Builds the React+nginx image (Vite multi-stage build) → starts frontend
+         nginx serves the React SPA at http://localhost:3000
+
+    ✅ Success indicator (all three services healthy):
+       workflowos-postgres   ... healthy
+       workflowos-backend    ... healthy
+       workflowos-frontend   ... healthy
+
+  ── Access the app ────────────────────────────────────────────────────────
+
+    Web browser (React via nginx):   http://localhost:3000
+    Spring Boot API:                  http://localhost:8080/api/health
+    PostgreSQL (DB client / Electron): localhost:5432  DB: workflowos
+
+  ── Electron desktop app (Docker backend) ─────────────────────────────────
+
+    The Electron app runs natively on your Mac (not in Docker).
+    With Docker running, the backend is accessible at localhost:8080.
+
+    cd frontend
+    npm install         # first time only
+    npm run electron:dev
+
+    The Electron window connects to the Docker backend automatically.
+
+  ── Useful Docker commands ────────────────────────────────────────────────
+
+    Start in background:     docker compose up -d --build
+    View logs:               docker compose logs -f
+    Backend logs only:       docker compose logs -f backend
+    Stop everything:         docker compose down
+    Stop + wipe DB data:     docker compose down -v
+    Restart one service:     docker compose restart backend
+    Check health:            docker compose ps
+
+  ── Connect to the database ───────────────────────────────────────────────
+
+    docker exec -it workflowos-postgres psql -U workflowos -d workflowos
+
+    -- List tables
+    \dt
+
+    -- Sample queries
+    SELECT * FROM users;
+    SELECT * FROM workflows;
+    SELECT * FROM workflow_tasks ORDER BY position;
+
+────────────────────────────────────────────────────────────────────────────────
 QUICK REFERENCE — PORT SUMMARY
 ────────────────────────────────────────────────────────────────────────────────
 
-  Service               Port
-  ──────────────────    ─────
-  Spring Boot backend   8080
-  Vite dev server       5173
-  Vite preview          4173
+  Service                     Mode          Port
+  ─────────────────────────   ───────────   ─────
+  Spring Boot backend         Local/Docker  8080
+  React frontend (nginx)      Docker only   3000
+  Vite dev server             Local only    5173
+  Vite preview                Local only    4173
+  PostgreSQL                  Docker        5432
 
 ────────────────────────────────────────────────────────────────────────────────
 TROUBLESHOOTING
 ────────────────────────────────────────────────────────────────────────────────
 
   Problem: "java: command not found"
-  Fix    : Install Java 17 via Homebrew: brew install --cask temurin@17
-           Then add to PATH: export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+  Fix    : brew install --cask temurin@17
+           export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 
   Problem: "mvn: command not found"
   Fix    : brew install maven
@@ -145,23 +217,32 @@ TROUBLESHOOTING
   Problem: "node: command not found"
   Fix    : brew install node
 
-  Problem: Electron window shows blank / white screen
-  Fix    : Make sure Vite (npm run dev) is running FIRST on port 5173.
-           Check Terminal #2 for errors.
+  Problem: "docker: command not found"
+  Fix    : Install Docker Desktop: https://www.docker.com/products/docker-desktop
 
-  Problem: "Backend Offline" shown in the dashboard
-  Fix    : Make sure Spring Boot (mvn spring-boot:run) is running in Terminal #1.
+  Problem: Electron window is blank
+  Fix    : Make sure Vite is running on port 5173 FIRST.
+
+  Problem: "Backend Offline" in the dashboard
+  Fix    : Either run   mvn spring-boot:run   or   docker compose up -d
            Verify: curl http://localhost:8080/api/health
 
   Problem: Port 8080 already in use
   Fix    : lsof -i :8080
            kill -9 <PID>
-           Then re-run mvn spring-boot:run
 
-  Problem: Port 5173 already in use
-  Fix    : lsof -i :5173
-           kill -9 <PID>
-           Then re-run npm run electron:dev
+  Problem: Port 5432 already in use (local Postgres conflicts with Docker)
+  Fix    : Change POSTGRES_PORT in .env to e.g. 5433
+           docker compose down && docker compose up -d
+
+  Problem: backend keeps restarting in Docker
+  Fix    : Check logs: docker compose logs backend
+           Usually a DB connection issue — ensure postgres service is healthy first.
+
+  Problem: Schema/data not loaded in PostgreSQL
+  Fix    : The schema.sql and data.sql run automatically on Spring Boot startup.
+           If you see "relation does not exist", wipe and restart:
+             docker compose down -v && docker compose up --build
 
 ================================================================================
   END OF EXECUTION FLOW

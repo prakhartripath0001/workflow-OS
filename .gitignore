@@ -21,7 +21,8 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# ─── Env ─────────────────────────────────────────────────────
+# ─── Env ─────────────────────────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
+# .env.example is intentionally NOT ignored — it's a template

@@ -1,0 +1,95 @@
+# =============================================================================
+#  Workflow OS — Docker Compose
+#  Services: postgres | backend | frontend
+# =============================================================================
+
+version: "3.9"
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  PostgreSQL 16
+  # ─────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: workflowos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-workflowos}
+      POSTGRES_USER:     ${POSTGRES_USER:-workflowos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workflowos}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - workflowos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workflowos} -d ${POSTGRES_DB:-workflowos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  Spring Boot Backend
+  # ─────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: workflowos-backend
+    restart: unless-stopped
+    environment:
+      DB_URL:      jdbc:postgresql://postgres:5432/${POSTGRES_DB:-workflowos}
+      DB_USERNAME: ${POSTGRES_USER:-workflowos}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-workflowos}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - workflowos-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  React Frontend (nginx)
+  # ─────────────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: workflowos-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - workflowos-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# =============================================================================
+#  Volumes & Networks
+# =============================================================================
+volumes:
+  postgres_data:
+    name: workflowos-postgres-data
+
+networks:
+  workflowos-net:
+    name: workflowos-network
+    driver: bridge
