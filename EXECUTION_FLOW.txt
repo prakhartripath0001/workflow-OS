@@ -1,0 +1,168 @@
+================================================================================
+  WORKFLOW OS — EXECUTION FLOW (macOS)
+  Step-by-step guide to start the application locally
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 0 — PREREQUISITES
+────────────────────────────────────────────────────────────────────────────────
+
+Before starting, ensure the following tools are installed on your Mac:
+
+  1. Java 17 (LTS)
+     → Check : java -version
+     → Install: https://adoptium.net  (Eclipse Temurin 17)
+       or via Homebrew:
+         brew install --cask temurin@17
+
+  2. Apache Maven 3.9+
+     → Check : mvn -version
+     → Install: brew install maven
+
+  3. Node.js 20+ (includes npm)
+     → Check : node -v  &&  npm -v
+     → Install: https://nodejs.org
+       or via Homebrew:
+         brew install node
+
+  4. Git (already installed if you cloned the repo)
+     → Check: git --version
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 1 — CLONE THE REPOSITORY (skip if already done)
+────────────────────────────────────────────────────────────────────────────────
+
+  git clone <your-repo-url> workflow-OS
+  cd workflow-OS
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 2 — START THE SPRING BOOT BACKEND
+────────────────────────────────────────────────────────────────────────────────
+
+Open Terminal #1 and run:
+
+  cd backend
+  mvn spring-boot:run
+
+  ✅ Success indicator:
+     You will see:
+       Started WorkflowOsApplication in X.XXX seconds
+
+  ℹ️  The backend starts on:  http://localhost:8080
+
+  Test it manually (optional):
+    curl http://localhost:8080/api/health
+    curl http://localhost:8080/api/info
+
+  Keep this terminal open and running.
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 3 — INSTALL FRONTEND DEPENDENCIES (first time only)
+────────────────────────────────────────────────────────────────────────────────
+
+Open Terminal #2 and run:
+
+  cd frontend
+  npm install
+
+  ⏳ This downloads React, Vite, Electron, Tailwind CSS, and all other
+     dependencies into the node_modules/ folder.
+     Takes ~1–2 minutes on the first run.
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 4 — START THE ELECTRON + REACT APP (Development Mode)
+────────────────────────────────────────────────────────────────────────────────
+
+Still in Terminal #2, run:
+
+  npm run electron:dev
+
+  What this does (in order):
+    a) Starts Vite dev server on http://localhost:5173
+    b) Waits for Vite to be ready (wait-on)
+    c) Launches the Electron desktop window
+    d) Electron loads http://localhost:5173 inside its window
+    e) React makes API calls to http://localhost:8080 (your Spring Boot backend)
+
+  ✅ Success indicator:
+     An Electron desktop window opens showing the Workflow OS dashboard.
+     The dashboard will show "Backend Online" if Spring Boot is running.
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 5 — DEVELOPMENT WORKFLOW
+────────────────────────────────────────────────────────────────────────────────
+
+  Frontend hot-reload:
+    → Edit any file in frontend/src/
+    → Vite automatically reloads the Electron window instantly.
+
+  Backend hot-restart:
+    → Edit any file in backend/src/
+    → Spring Boot DevTools detects the change and restarts automatically.
+       (You may need to trigger a build in your IDE, or re-run mvn spring-boot:run)
+
+  DevTools:
+    → Electron opens Chrome DevTools in a detached window automatically.
+    → Use it for React debugging, network inspection, and console logs.
+
+────────────────────────────────────────────────────────────────────────────────
+STEP 6 — PRODUCTION BUILD (optional)
+────────────────────────────────────────────────────────────────────────────────
+
+  Build the Spring Boot JAR:
+    cd backend
+    mvn clean package -DskipTests
+    → Output: backend/target/backend-1.0.0.jar
+    → Run   : java -jar target/backend-1.0.0.jar
+
+  Build the Electron macOS .app:
+    cd frontend
+    npm run electron:build
+    → Output: frontend/dist-electron/  (contains Workflow OS.app)
+    → The .app bundles React + Electron and connects to the backend at startup.
+
+────────────────────────────────────────────────────────────────────────────────
+QUICK REFERENCE — PORT SUMMARY
+────────────────────────────────────────────────────────────────────────────────
+
+  Service               Port
+  ──────────────────    ─────
+  Spring Boot backend   8080
+  Vite dev server       5173
+  Vite preview          4173
+
+────────────────────────────────────────────────────────────────────────────────
+TROUBLESHOOTING
+────────────────────────────────────────────────────────────────────────────────
+
+  Problem: "java: command not found"
+  Fix    : Install Java 17 via Homebrew: brew install --cask temurin@17
+           Then add to PATH: export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+
+  Problem: "mvn: command not found"
+  Fix    : brew install maven
+
+  Problem: "node: command not found"
+  Fix    : brew install node
+
+  Problem: Electron window shows blank / white screen
+  Fix    : Make sure Vite (npm run dev) is running FIRST on port 5173.
+           Check Terminal #2 for errors.
+
+  Problem: "Backend Offline" shown in the dashboard
+  Fix    : Make sure Spring Boot (mvn spring-boot:run) is running in Terminal #1.
+           Verify: curl http://localhost:8080/api/health
+
+  Problem: Port 8080 already in use
+  Fix    : lsof -i :8080
+           kill -9 <PID>
+           Then re-run mvn spring-boot:run
+
+  Problem: Port 5173 already in use
+  Fix    : lsof -i :5173
+           kill -9 <PID>
+           Then re-run npm run electron:dev
+
+================================================================================
+  END OF EXECUTION FLOW
+================================================================================
