@@ -8,7 +8,7 @@ function Dashboard({ user, onLogout }) {
     <div className="dashboard">
       <div className="dash-sidebar">
         <div className="dash-logo">
-          <span className="dash-logo-icon">⚡</span>
+          <span className="dash-logo-icon">W</span>
           <span className="dash-logo-text">Workflow OS</span>
         </div>
         <nav className="dash-nav">
@@ -39,7 +39,7 @@ function Dashboard({ user, onLogout }) {
         <header className="dash-header">
           <div>
             <h1 className="dash-title">Dashboard</h1>
-            <p className="dash-subtitle">Welcome back, {user.name?.split(' ')[0]} 👋</p>
+            <p className="dash-subtitle">Welcome back, {user.name?.split(' ')[0]}</p>
           </div>
           <button className="btn-primary">+ New Workflow</button>
         </header>
@@ -59,7 +59,7 @@ function Dashboard({ user, onLogout }) {
         </div>
 
         <div className="dash-welcome-card glass-card">
-          <h2>🚀 You're logged in!</h2>
+          <h2>You're logged in!</h2>
           <p>Your Workflow OS workspace is ready. The backend is connected and your session is active.</p>
           <p style={{ marginTop: '0.5rem', opacity: 0.5, fontSize: '0.8rem' }}>
             Session token: {sessionStorage.getItem('wf_token')?.slice(0, 16)}…
@@ -78,6 +78,24 @@ export default function App() {
       return stored ? JSON.parse(stored) : null
     } catch { return null }
   })
+
+  // ── Handle OAuth redirect: backend sends ?wf_token=...&wf_name=...&wf_email=... ──
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token  = params.get('wf_token')
+    const id     = params.get('wf_id')
+    const name   = params.get('wf_name')?.replace(/\+/g, ' ')
+    const email  = params.get('wf_email')
+
+    if (token && email) {
+      const userData = { id, name, email, token }
+      sessionStorage.setItem('wf_token', token)
+      sessionStorage.setItem('wf_user',  JSON.stringify({ id, name, email }))
+      setUser(userData)
+      // Clean the URL so refreshing doesn't re-process params
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   function handleAuth(userData) {
     setUser(userData)

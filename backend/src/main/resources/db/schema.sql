@@ -25,16 +25,25 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$
 -- =============================================================================
 --  TABLE: users
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS users (
-    id              UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            VARCHAR(120) NOT NULL,
-    email           VARCHAR(255) NOT NULL,
-    password_hash   VARCHAR(255) NOT NULL DEFAULT '',
-    avatar_url      TEXT,
-    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+-- auth_provider: how the user signed up (local email/pw, google, or github)
+DO $$ BEGIN
+    CREATE TYPE auth_provider AS ENUM ('local', 'google', 'github');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$
+^^
 
-    CONSTRAINT uq_users_email UNIQUE (email)
+CREATE TABLE IF NOT EXISTS users (
+    id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            VARCHAR(120)  NOT NULL,
+    email           VARCHAR(255)  NOT NULL,
+    password_hash   VARCHAR(255),                       -- NULL for OAuth-only accounts
+    provider        auth_provider NOT NULL DEFAULT 'local',
+    provider_id     VARCHAR(255),                       -- OAuth provider's user ID
+    avatar_url      TEXT,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_users_email            UNIQUE (email),
+    CONSTRAINT uq_users_provider         UNIQUE (provider, provider_id)
 )
 ^^
 
@@ -42,13 +51,19 @@ COMMENT ON TABLE  users                  IS 'Application users'
 ^^
 COMMENT ON COLUMN users.email            IS 'Unique email address used for login'
 ^^
-COMMENT ON COLUMN users.password_hash    IS 'BCrypt-hashed password — never store plaintext'
+COMMENT ON COLUMN users.password_hash    IS 'BCrypt-hashed password — NULL for OAuth-only accounts'
 ^^
-COMMENT ON COLUMN users.avatar_url       IS 'Optional URL to user profile picture'
+COMMENT ON COLUMN users.provider         IS 'How the user authenticates: local email/pw, google, or github'
+^^
+COMMENT ON COLUMN users.provider_id      IS 'User ID returned by the OAuth provider'
+^^
+COMMENT ON COLUMN users.avatar_url       IS 'Profile picture URL (from OAuth or user-set)'
 ^^
 
--- ─── Index ─────────────────────────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)
+-- ─── Indexes ────────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_users_email       ON users (email)
+^^
+CREATE INDEX IF NOT EXISTS idx_users_provider_id ON users (provider, provider_id)
 ^^
 
 -- =============================================================================

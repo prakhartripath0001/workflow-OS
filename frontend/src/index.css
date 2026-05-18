@@ -97,9 +97,17 @@ body {
   gap: 0.6rem;
 }
 .logo-mark {
-  font-size: 1.8rem;
-  line-height: 1;
-  filter: drop-shadow(0 0 12px rgba(92, 124, 250, 0.7));
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4c6ef5, #748ffc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
 }
 .logo-text {
   font-size: 1.3rem;
@@ -333,6 +341,54 @@ body {
   text-align: center;
 }
 
+/* ─── OAuth Divider ────────────────────────────────────────────── */
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.25rem 0 0.75rem;
+  color: rgba(255,255,255,0.25);
+  font-size: 0.78rem;
+}
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* ─── OAuth Buttons ────────────────────────────────────────────── */
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  width: 100%;
+}
+.oauth-btn:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.oauth-btn:active { transform: scale(0.98); }
+
 /* ═══════════════════════════════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════════════════════════════ */
@@ -363,7 +419,19 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.07);
   margin-bottom: 0.5rem;
 }
-.dash-logo-icon { font-size: 1.3rem; }
+.dash-logo-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #4c6ef5, #748ffc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
 .dash-logo-text { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; }
 
 .dash-nav { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }

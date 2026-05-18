@@ -9,12 +9,13 @@
 
 -- ─── Users ────────────────────────────────────────────────────────────────────
 -- password_hash is BCrypt of "password123" (cost factor 10)
-INSERT INTO users (id, name, email, password_hash, avatar_url) VALUES
+INSERT INTO users (id, name, email, password_hash, provider, avatar_url) VALUES
 (
     'a1b2c3d4-0001-0001-0001-000000000001',
     'Alice Johnson',
     'alice@workflowos.dev',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    'local',
     'https://api.dicebear.com/8.x/avataaars/svg?seed=alice'
 ),
 (
@@ -22,6 +23,7 @@ INSERT INTO users (id, name, email, password_hash, avatar_url) VALUES
     'Bob Martinez',
     'bob@workflowos.dev',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    'local',
     'https://api.dicebear.com/8.x/avataaars/svg?seed=bob'
 )
 ON CONFLICT (id) DO NOTHING
