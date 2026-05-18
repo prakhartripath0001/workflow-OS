@@ -199,7 +199,7 @@ Both files are executed automatically by Spring Boot on startup (`spring.sql.ini
 
 ---
 
-## 🚀 Getting Started — Local
+## 🚀 Getting Started — Local (no Docker)
 
 ### 1. Clone
 
@@ -208,7 +208,7 @@ git clone <your-repo-url> workflow-OS
 cd workflow-OS
 ```
 
-### 2. Create the PostgreSQL database
+### 2. Start PostgreSQL and create the database
 
 ```bash
 psql -U postgres -c "CREATE DATABASE workflowos;"
@@ -216,75 +216,124 @@ psql -U postgres -c "CREATE USER workflowos WITH PASSWORD 'workflowos';"
 psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE workflowos TO workflowos;"
 ```
 
-### 3. Start the backend
+### 3. Start the Spring Boot backend
 
 ```bash
 cd backend
 mvn spring-boot:run
-# Spring Boot auto-runs schema.sql then data.sql on first boot
+# Spring Boot auto-runs schema.sql → data.sql on first boot
+# API starts on http://localhost:8080
 ```
-
-> API starts on **http://localhost:8080**
 
 ### 4. Install frontend dependencies *(first time only)*
 
 ```bash
-cd frontend && npm install
+cd ../frontend && npm install
 ```
 
-### 5. Launch Electron
+### 5. Launch the Electron desktop app
+
+```bash
+npm run electron:dev
+# Opens the native desktop window pointing to http://localhost:8080
+```
+
+---
+
+## 🐳 Getting Started — Docker + Electron *(recommended)*
+
+This is the **fastest way** to get everything running. Docker handles the database and backend; Electron runs natively on your Mac for the desktop window.
+
+### Step 1 — Copy environment variables
+
+```bash
+cd workflow-OS
+cp .env.example .env
+# Edit .env if you want custom passwords (optional)
+```
+
+### Step 2 — Start backend services with Docker
+
+```bash
+docker compose up -d --build
+```
+
+This will:
+1. 🐘 Start **PostgreSQL 16** on port `5432`
+2. ☕ Build and start the **Spring Boot** backend on port `8080`  
+   *(runs `schema.sql` + `data.sql` automatically — creates tables and demo accounts)*
+3. ⏳ Wait for health checks to pass before proceeding
+
+> **Check everything is healthy:**
+> ```bash
+> docker compose ps
+> # All three services should show "healthy"
+> ```
+
+### Step 3 — Install frontend dependencies *(first time only)*
+
+```bash
+cd frontend
+npm install
+```
+
+### Step 4 — Launch the Electron desktop app
 
 ```bash
 npm run electron:dev
 ```
 
+A **native desktop window** will open. You will see the **Login / Sign Up** screen.
+
+### Step 5 — Sign in
+
+Use the pre-seeded demo accounts:
+
+| Email | Password |
+|-------|----------|
+| `alice@workflowos.dev` | `password123` |
+| `bob@workflowos.dev` | `password123` |
+
+Or click **Sign Up** to create your own account.
+
 ---
 
-## 🐳 Getting Started — Docker
-
-### 1. Copy environment file
-
-```bash
-cp .env.example .env
-# Optionally edit POSTGRES_PASSWORD
-```
-
-### 2. Start everything
-
-```bash
-docker compose up --build
-```
-
-Startup order (enforced by healthchecks):
-1. **postgres** starts → `pg_isready` passes ✅
-2. **backend** starts → runs `schema.sql` + `data.sql` → `/actuator/health` passes ✅
-3. **frontend** starts → nginx serves React SPA ✅
-
-### 3. Access
+### 🔗 Service URLs (when Docker is running)
 
 | URL | Description |
 |-----|-------------|
-| `http://localhost:3000` | React frontend (nginx) |
-| `http://localhost:8080/api/health` | Spring Boot API |
-| `localhost:5432` | PostgreSQL (DB client) |
+| `http://localhost:3000` | React app served by nginx (web browser) |
+| `http://localhost:8080/api/health` | Spring Boot health check |
+| `http://localhost:8080/api/auth/login` | Auth endpoint |
+| `localhost:5432` | PostgreSQL (use any DB client) |
 
-### 4. Launch Electron against Docker backend *(optional)*
-
-```bash
-cd frontend && npm run electron:dev
-# Electron connects to http://localhost:8080 (Docker backend)
-```
-
-### Useful Docker commands
+### 🛠️ Useful Docker commands
 
 ```bash
-docker compose up -d --build   # start in background
-docker compose logs -f         # stream all logs
-docker compose logs -f backend # backend logs only
-docker compose ps              # check health status
-docker compose down            # stop all
-docker compose down -v         # stop + wipe DB volume
+docker compose up -d --build    # Start in background (rebuilds images)
+docker compose logs -f          # Stream all logs
+docker compose logs -f backend  # Backend logs only
+docker compose ps               # Check service health
+docker compose down             # Stop all containers
+docker compose down -v          # Stop + wipe database volume (fresh start)
 ```
+
+---
+
+### ❓ Troubleshooting
+
+**The app shows a black screen?**
+→ Make sure Docker containers are running: `docker compose ps`  
+→ Then run `npm run electron:dev` from the `frontend/` directory.
+
+**Login fails with "connection refused"?**
+→ Backend isn't ready yet. Run `docker compose logs -f backend` and wait for `Started WorkflowOsApplication`.
+
+**"Email already exists" on signup?**
+→ Use a different email, or `docker compose down -v` to reset the database.
+
+**Port 8080 already in use?**
+→ Edit `.env` and change `BACKEND_PORT=8081`, then update the API URL in `frontend/src/pages/AuthPage.jsx`.
 
 ---
 

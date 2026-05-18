@@ -3,23 +3,29 @@
 --  File   : data.sql
 --  Purpose: Insert initial demo users, workflows, and tasks
 --  Note   : Uses fixed UUIDs so re-runs are idempotent (ON CONFLICT DO NOTHING)
+--
+--  NOTE: Statements are delimited by ^^ (not ;) — matches spring.sql.init.separator
 -- =============================================================================
 
 -- ─── Users ────────────────────────────────────────────────────────────────────
-INSERT INTO users (id, name, email, avatar_url) VALUES
+-- password_hash is BCrypt of "password123" (cost factor 10)
+INSERT INTO users (id, name, email, password_hash, avatar_url) VALUES
 (
     'a1b2c3d4-0001-0001-0001-000000000001',
     'Alice Johnson',
     'alice@workflowos.dev',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'https://api.dicebear.com/8.x/avataaars/svg?seed=alice'
 ),
 (
     'a1b2c3d4-0002-0002-0002-000000000002',
     'Bob Martinez',
     'bob@workflowos.dev',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'https://api.dicebear.com/8.x/avataaars/svg?seed=bob'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING
+^^
 
 -- ─── Workflows ────────────────────────────────────────────────────────────────
 INSERT INTO workflows (id, name, description, status, owner_id) VALUES
@@ -44,7 +50,8 @@ INSERT INTO workflows (id, name, description, status, owner_id) VALUES
     'DRAFT',
     'a1b2c3d4-0002-0002-0002-000000000002'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING
+^^
 
 -- ─── Workflow Tasks ────────────────────────────────────────────────────────────
 INSERT INTO workflow_tasks (id, workflow_id, title, description, status, position) VALUES
@@ -110,4 +117,5 @@ INSERT INTO workflow_tasks (id, workflow_id, title, description, status, positio
     'Rotate all long-lived IAM access keys and update Secrets Manager.',
     'TODO', 1
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING
+^^

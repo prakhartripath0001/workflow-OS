@@ -4,13 +4,12 @@
 # =============================================================================
 
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM amazoncorretto:17-alpine AS builder
 
 WORKDIR /build
 
 # Cache dependency layer — copy POM first
 COPY pom.xml .
-COPY .mvn/ .mvn/
 
 # Download dependencies (cached unless pom.xml changes)
 RUN apk add --no-cache maven && \
@@ -21,7 +20,7 @@ COPY src/ src/
 RUN mvn clean package -DskipTests -B
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM amazoncorretto:17-alpine AS runtime
 
 LABEL maintainer="workflow-os" \
       description="Workflow OS Spring Boot Backend" \

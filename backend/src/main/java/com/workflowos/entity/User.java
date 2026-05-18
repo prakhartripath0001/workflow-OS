@@ -1,6 +1,7 @@
 package com.workflowos.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -19,6 +20,10 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
+    @JsonIgnore
+    @Column(name = "password_hash", nullable = false, length = 255)
+    private String passwordHash;
+
     @Column(name = "avatar_url")
     private String avatarUrl;
 
@@ -31,6 +36,7 @@ public class User {
     @PrePersist
     protected void onCreate() {
         createdAt = updatedAt = OffsetDateTime.now();
+        if (passwordHash == null) passwordHash = "";
     }
 
     @PreUpdate
@@ -44,8 +50,11 @@ public class User {
     public void   setName(String name)               { this.name = name; }
     public String getEmail()                         { return email; }
     public void   setEmail(String email)             { this.email = email; }
+    public String getPasswordHash()                  { return passwordHash; }
+    public void   setPasswordHash(String hash)       { this.passwordHash = hash; }
     public String getAvatarUrl()                     { return avatarUrl; }
     public void   setAvatarUrl(String avatarUrl)     { this.avatarUrl = avatarUrl; }
     public OffsetDateTime getCreatedAt()             { return createdAt; }
     public OffsetDateTime getUpdatedAt()             { return updatedAt; }
 }
+
