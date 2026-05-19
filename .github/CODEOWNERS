@@ -1,0 +1,36 @@
+# CODEOWNERS
+# =============================================================================
+# Each line is a pattern followed by one or more GitHub @usernames or teams.
+# The last matching rule wins. Patterns follow .gitignore conventions.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# =============================================================================
+
+# ── Default: core team owns everything ────────────────────────────────────────
+*                                   @praakhartripathi
+
+# ── Backend (Spring Boot / Java) ──────────────────────────────────────────────
+/backend/**                         @praakhartripathi
+
+# ── Frontend (React / Electron) ───────────────────────────────────────────────
+/frontend/**                        @praakhartripathi
+/frontend/electron/**               @praakhartripathi
+
+# ── Infrastructure & DevOps ───────────────────────────────────────────────────
+/docker-compose.yml                 @praakhartripathi
+/backend/Dockerfile                 @praakhartripathi
+/frontend/Dockerfile                @praakhartripathi
+/.github/**                         @praakhartripathi
+
+# ── Database Migrations ───────────────────────────────────────────────────────
+/backend/src/main/resources/db/**   @praakhartripathi
+
+# ── Security-sensitive files ──────────────────────────────────────────────────
+SECURITY.md                         @praakhartripathi
+.env.example                        @praakhartripathi
+/backend/src/main/java/**/config/** @praakhartripathi
+/backend/src/main/java/**/auth/**   @praakhartripathi
+
+# ── Documentation ─────────────────────────────────────────────────────────────
+/docs/**                            @praakhartripathi
+README.md                           @praakhartripathi
+CONTRIBUTING.md                     @praakhartripathi

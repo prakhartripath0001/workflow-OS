@@ -1,0 +1,62 @@
+---
+description: Electron main process security rules for SlashAI
+globs: ["frontend/electron/**/*.js"]
+alwaysApply: true
+---
+
+# Electron Security Rules
+
+## Critical Security Settings (NON-NEGOTIABLE)
+Every `BrowserWindow` MUST have:
+```javascript
+webPreferences: {
+  nodeIntegration: false,      // Never true — XSS → RCE vector
+  contextIsolation: true,      // Isolates renderer from Node.js
+  sandbox: true,               // Additional OS-level sandboxing
+  webSecurity: true,           // Enforces same-origin policy
+  allowRunningInsecureContent: false,
+  preload: path.join(__dirname, 'preload.js'),
+}
+```
+
+## IPC Architecture (Mandatory)
+- Renderer NEVER calls Node.js directly
+- ALL cross-process communication goes through `contextBridge` in `preload.js`
+- ONLY whitelisted channel names in `VALID_SEND_CHANNELS`, `VALID_INVOKE_CHANNELS`, `VALID_RECEIVE_CHANNELS`
+- New IPC channels: add to whitelist in preload.js AND create handler in `ipc/` folder
+- Handler modules export a `register(ipcMain)` function — main.js orchestrates registration
+
+## External URL Handling
+```javascript
+// ALWAYS use this pattern — never open external URLs in the app window
+win.webContents.setWindowOpenHandler(({ url }) => {
+  shell.openExternal(url)
+  return { action: 'deny' }
+})
+```
+
+## Content Security Policy
+Add to all loaded HTML:
+```html
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self';
+           style-src 'self' 'unsafe-inline';
+           connect-src 'self' http://localhost:8080 https://api.slashai.app;
+           img-src 'self' data: https:;
+           font-src 'self' https://fonts.gstatic.com">
+```
+
+## Token Storage
+- NEVER store JWTs in `localStorage` (persists after app close, XSS accessible)
+- Use `sessionStorage` for web mode (cleared on tab close)
+- In Electron production: use `safeStorage.encryptString()` + OS keychain via `keytar`
+
+## Protocol Handler
+- Register custom protocol `slashai://` ONLY if deep linking is needed
+- Validate all deep-link URLs before processing — treat as untrusted input
+
+## Auto-Updater Security
+- Always verify update signatures with `electron-updater`
+- Use `allowPrerelease: false` in production
+- Updates served over HTTPS only

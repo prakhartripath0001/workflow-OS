@@ -1,50 +1,118 @@
 {
-  "name": "workflow-os-frontend",
+  "name": "slashai-frontend",
   "version": "1.0.0",
-  "description": "Electron + React frontend for Workflow OS",
+  "description": "Electron + React frontend for SlashAI — AI-powered desktop workspace",
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "electron:dev": "concurrently -k \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+
+    "electron:dev": "concurrently -k -n VITE,ELECTRON -c cyan,yellow \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "npm run build && electron-builder",
-    "lint": "eslint src --ext .js,.jsx"
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:linux": "npm run build && electron-builder --linux",
+
+    "lint": "eslint src electron --ext .js,.jsx --max-warnings 0",
+    "lint:fix": "eslint src electron --ext .js,.jsx --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"electron/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"electron/**/*.js\"",
+
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+
+    "prepare": "cd .. && husky frontend/.husky",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "axios": "^1.7.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.24.0",
+    "zustand": "^4.5.4"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.24.7",
+    "@babel/preset-react": "^7.24.6",
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
     "autoprefixer": "^10.4.19",
     "concurrently": "^8.2.2",
     "electron": "^31.0.0",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-react": "^7.34.3",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "husky": "^9.0.11",
+    "jsdom": "^24.1.0",
+    "lint-staged": "^15.2.7",
     "postcss": "^8.4.38",
+    "prettier": "^3.3.2",
     "tailwindcss": "^3.4.4",
     "vite": "^5.3.1",
+    "vitest": "^1.6.0",
     "wait-on": "^7.2.0"
   },
+  "lint-staged": {
+    "src/**/*.{js,jsx}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "electron/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "src/**/*.css": [
+      "prettier --write"
+    ]
+  },
   "build": {
-    "appId": "com.workflowos.app",
-    "productName": "Workflow OS",
+    "appId": "app.slashai.desktop",
+    "productName": "SlashAI",
+    "copyright": "Copyright © 2026 SlashAI",
     "mac": {
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
+    },
+    "win": {
+      "target": "nsis",
+      "publisherName": "SlashAI"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "!electron/**/*.test.js"
     ],
     "directories": {
       "buildResources": "assets",
       "output": "dist-electron"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
     }
   },
-  "keywords": ["electron", "react", "workflow", "desktop"],
-  "author": "Workflow OS",
+  "keywords": ["electron", "react", "ai", "workspace", "slash-command", "automation"],
+  "author": {
+    "name": "Prakhar Tripathi",
+    "email": "contact@slashai.app",
+    "url": "https://github.com/praakhartripathi"
+  },
   "license": "MIT"
 }

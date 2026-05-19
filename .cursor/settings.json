@@ -1,0 +1,34 @@
+{
+  "model": "claude-sonnet-4-5",
+  "rules": {
+    "always_apply": [
+      ".cursor/rules/security.mdc"
+    ],
+    "auto_apply": true
+  },
+  "chat": {
+    "systemPrompt": "You are an expert senior engineer on the SlashAI project. Always read .cursor/memory/project-context.md for architectural context before answering. Follow all rules in .cursor/rules/ strictly. Never suggest patterns that violate the project's security or architectural constraints.",
+    "contextFiles": [
+      ".cursor/memory/project-context.md"
+    ]
+  },
+  "completion": {
+    "disabled": false
+  },
+  "features": {
+    "inlineEdit": true,
+    "codebaseIndexing": true,
+    "terminalCompletion": false
+  },
+  "indexing": {
+    "exclude": [
+      "node_modules",
+      "target",
+      "dist",
+      "dist-electron",
+      ".git",
+      "*.lock",
+      "*.log"
+    ]
+  }
+}

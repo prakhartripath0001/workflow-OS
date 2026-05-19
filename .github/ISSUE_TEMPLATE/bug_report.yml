@@ -1,0 +1,120 @@
+name: "🐛 Bug Report"
+description: "File a bug report to help us improve SlashAI"
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for taking the time to file a bug report!
+        Please fill in as much detail as possible to help us reproduce and fix the issue quickly.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: "What happened?"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "When I click the slash command bar and type /gmail..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: "Steps to Reproduce"
+      description: "How do we reproduce this bug? Be as specific as possible."
+      placeholder: |
+        1. Open the app
+        2. Click on the command bar
+        3. Type '/gmail'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: "Actual Behavior"
+      description: "What actually happened? Include error messages / stack traces if applicable."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Severity"
+      options:
+        - "🔴 Critical (app crashes / data loss)"
+        - "🟠 High (major feature broken)"
+        - "🟡 Medium (feature partially broken)"
+        - "🟢 Low (minor inconvenience)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: "Affected Component"
+      multiple: true
+      options:
+        - "Electron Shell"
+        - "React Frontend"
+        - "Spring Boot Backend"
+        - "PostgreSQL / Database"
+        - "OAuth / Authentication"
+        - "AI Service Layer"
+        - "Gmail Integration"
+        - "GitHub Integration"
+        - "Docker / Infra"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: "SlashAI Version"
+      placeholder: "e.g. v1.2.3"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Operating System"
+      options:
+        - "macOS"
+        - "Windows"
+        - "Linux (Ubuntu)"
+        - "Linux (Other)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevant Logs / Screenshots"
+      description: "Paste any relevant log output or attach screenshots. Logs can be found in DevTools console or backend logs."
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Pre-Submission Checklist"
+      options:
+        - label: "I have searched existing issues to make sure this isn't a duplicate"
+          required: true
+        - label: "I have included all relevant logs and screenshots"
+          required: true
+        - label: "I am using the latest version of SlashAI"
+          required: false

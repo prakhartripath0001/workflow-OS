@@ -1,0 +1,71 @@
+---
+description: Testing standards for SlashAI — frontend and backend
+globs: ["**/*.test.{js,jsx}", "**/*Test.java", "**/*Spec.java"]
+alwaysApply: true
+---
+
+# Testing Standards
+
+## Backend (JUnit 5 + Testcontainers)
+
+### Test Naming Convention
+```java
+@Test
+void executeCommand_givenValidGmailInput_returnsSuccessResponse() { ... }
+void login_givenInvalidCredentials_throws401() { ... }
+```
+
+### Unit Tests (Service Layer)
+- Mock all dependencies with `@ExtendWith(MockitoExtension.class)` + `@Mock`
+- Test every public service method — at minimum: happy path + one error path
+- No Spring context loading in unit tests — keep them fast (<100ms each)
+
+### Integration Tests (Controller + Repository)
+- Use `@SpringBootTest` + `@AutoConfigureMockMvc` for controller tests
+- Use Testcontainers (`@Testcontainers` + `@Container`) for real PostgreSQL
+- Never use H2 in-memory — behaviour differs from PostgreSQL (e.g. case sensitivity, JSON)
+- Apply `@Sql` to seed test data per test class
+
+### Coverage Requirements (enforced by JaCoCo in CI)
+- Line coverage: ≥ 60% across all modules
+- Branch coverage: ≥ 50%
+- Excluded from coverage: `entity/`, `dto/`, `config/`, generated code
+
+## Frontend (Vitest + React Testing Library)
+
+### What to Test
+- Custom hooks: test with `renderHook` from RTL
+- Service functions: mock `apiClient` with `vi.mock`, test error handling
+- Complex utility functions: pure unit tests
+- Page components: test critical user flows (form submit, redirect, error state)
+
+### What NOT to Test
+- Style/CSS — visual regression testing is separate
+- Third-party library internals
+- Simple pass-through components
+
+### RTL Principles
+```jsx
+// ✅ Query by accessible role (preferred)
+screen.getByRole('button', { name: /execute/i })
+screen.getByLabelText(/email/i)
+
+// ✅ Query by test-id (fallback for non-semantic elements)
+screen.getByTestId('command-result')
+
+// ❌ Never query by class name or CSS selector
+```
+
+### Mock Pattern for API Calls
+```javascript
+import { vi } from 'vitest'
+import * as authService from '../services/authService'
+
+vi.mock('../services/authService')
+authService.getCurrentUser.mockResolvedValue({ id: 1, email: 'test@example.com' })
+```
+
+## CI Enforcement
+- `mvn verify` (backend) and `npm test` (frontend) both run on every PR
+- PRs cannot be merged with failing tests
+- Coverage reports uploaded as PR artifacts for review

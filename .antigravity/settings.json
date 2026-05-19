@@ -1,0 +1,42 @@
+{
+  "projectName": "SlashAI",
+  "version": "1.0.0",
+  "description": "AI-powered desktop workspace — Electron + React + Spring Boot + PostgreSQL",
+  "activeAgents": ["backend", "frontend", "devops", "security", "pr-review"],
+  "defaultAgent": "backend",
+  "memoryFile": ".antigravity/memory.md",
+  "rulesDir": ".antigravity/rules/",
+  "agentsDir": ".antigravity/agents/",
+  "autoInvokeSecurityAgent": true,
+  "securityAgentTriggerPatterns": [
+    "**/auth/**",
+    "**/preload.js",
+    "**/main.js",
+    "**/*SecurityConfig*",
+    "**/.env*",
+    "**/Dockerfile",
+    "**/docker-compose*"
+  ],
+  "codegenDefaults": {
+    "backend": {
+      "basePackage": "com.workflowos",
+      "responseWrapper": "ApiResponse",
+      "exceptionPackage": "com.workflowos.common.exception",
+      "loggingAnnotation": "@Slf4j",
+      "injectionStyle": "constructor"
+    },
+    "frontend": {
+      "componentStyle": "functional",
+      "stateManagement": "zustand",
+      "apiClientPath": "src/services/apiClient.js",
+      "testFramework": "vitest"
+    }
+  },
+  "integrations": {
+    "github": {
+      "repo": "praakhartripathi/workflow-OS",
+      "ciWorkflow": ".github/workflows/ci.yml",
+      "cdWorkflow": ".github/workflows/cd.yml"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+name: "✨ Feature Request"
+description: "Suggest a new feature or enhancement for SlashAI"
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for suggesting a new feature!
+        Please describe your idea clearly so we can evaluate it.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem Statement"
+      description: "What problem does this feature solve? What's your use case?"
+      placeholder: "I'm always frustrated when I have to switch apps to check my emails while using SlashAI..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: "Proposed Solution"
+      description: "Describe the feature you'd like. Be as specific as possible."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives Considered"
+      description: "Any alternative solutions or workarounds you've considered?"
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: "Relevant Component"
+      multiple: true
+      options:
+        - "Slash Command System"
+        - "AI Intent Recognition"
+        - "Gmail Integration"
+        - "GitHub Integration"
+        - "Electron Shell"
+        - "React Frontend"
+        - "Spring Boot Backend"
+        - "Authentication"
+        - "New Integration"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority (from your perspective)"
+      options:
+        - "🔥 Must have"
+        - "👍 Nice to have"
+        - "💡 Just an idea"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "Additional Context / Mockups"
+      description: "Add any other context, screenshots, mockups, or references."
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Pre-Submission Checklist"
+      options:
+        - label: "I have searched existing issues to avoid duplicates"
+          required: true
+        - label: "This feature aligns with the goals of SlashAI (AI workspace automation)"
+          required: false

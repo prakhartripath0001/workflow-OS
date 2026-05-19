@@ -1,0 +1,9 @@
+#!/bin/sh
+# Husky pre-commit hook — runs lint-staged before every commit
+# Installed via: npx husky init (run from frontend/ directory)
+# This file lives at frontend/.husky/pre-commit
+
+. "$(dirname "$0")/_/husky.sh"
+
+cd "$(git rev-parse --show-toplevel)/frontend"
+npx lint-staged

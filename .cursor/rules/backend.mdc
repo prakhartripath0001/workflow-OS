@@ -1,0 +1,62 @@
+---
+description: Spring Boot backend architecture rules for SlashAI
+globs: ["backend/src/**/*.java"]
+alwaysApply: true
+---
+
+# Backend Architecture Rules
+
+## Package Structure (Strict)
+```
+com.workflowos/
+  {module}/
+    controller/   ← HTTP layer ONLY — delegate to service immediately
+    service/      ← Business logic — all validation and orchestration here
+    repository/   ← Spring Data JPA interfaces ONLY
+    entity/       ← JPA entities — no business logic here
+    dto/          ← Request/Response DTOs — never expose entities directly
+    model/        ← Value objects, enums, non-JPA models
+```
+
+## Controller Rules
+- Controllers are THIN — one line of logic max per method
+- Always return `ApiResponse<T>` wrapper from `common/dto/`
+- All endpoints must have `@Operation` Swagger annotation
+- Validate inputs with `@Valid` — let GlobalExceptionHandler handle violations
+- Never catch exceptions in controllers — they bubble to GlobalExceptionHandler
+- Use `@AuthenticationPrincipal` to get current user — never parse JWT manually
+
+## Service Rules
+- One public method per business use case
+- All service methods must have JavaDoc
+- Use constructor injection ONLY — no `@Autowired` on fields
+- Annotate with `@Transactional` where DB writes are involved
+- Log entry/exit of important operations with `@Slf4j`
+
+## Repository Rules
+- Extend `JpaRepository<Entity, Long>` — no custom SQL unless absolutely needed
+- Custom queries: prefer JPQL (`@Query`) over native SQL
+- Never use `.findAll()` on unbounded collections — always paginate
+
+## Entity Rules
+- Always define `@CreationTimestamp` and `@UpdateTimestamp` on every entity
+- Use `@Column(nullable = false)` explicitly — don't rely on DB defaults
+- Prefer `Long` IDs with `@GeneratedValue(strategy = IDENTITY)`
+- Never serialize entities directly to JSON — always map to DTOs
+
+## Exception Handling
+- Use domain exceptions in `common/exception/`: `ResourceNotFoundException`, `ConflictException`, `ValidationException`
+- Throw meaningful domain exceptions from services — never generic `RuntimeException`
+- GlobalExceptionHandler maps all exceptions to correct HTTP status codes
+
+## Security
+- Use `@PreAuthorize("hasRole('ADMIN')")` for admin-only endpoints
+- Never log passwords, tokens, or PII
+- All secrets come from environment variables — never hardcode
+- Parameterized queries only (JPA prevents SQL injection by default)
+
+## Testing Requirements
+- Every service method needs a unit test in `src/test/`
+- Integration tests use Testcontainers (real PostgreSQL — not H2)
+- Minimum 60% line coverage enforced by JaCoCo in CI
+- Test naming: `methodName_givenCondition_expectedResult()`

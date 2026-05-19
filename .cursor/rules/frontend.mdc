@@ -1,0 +1,59 @@
+---
+description: Frontend engineering rules for SlashAI React/Electron application
+globs: ["frontend/src/**/*.{js,jsx}", "frontend/electron/**/*.js"]
+alwaysApply: true
+---
+
+# Frontend Engineering Rules
+
+## Component Architecture
+- Use **functional components** with hooks ONLY — no class components ever
+- One component per file — filename matches the exported component name
+- Keep components under 200 lines; extract sub-components if larger
+- Co-locate component-specific styles, tests, and hooks in the same folder
+- Example structure:
+  ```
+  components/CommandBar/
+    index.jsx          ← public export
+    CommandBar.jsx     ← implementation
+    CommandBar.test.jsx
+    useCommandBar.js   ← local hook
+  ```
+
+## State Management
+- **Local state** → `useState` / `useReducer`
+- **Global state** → Zustand stores in `src/store/`
+- **Server state** → direct service calls + local loading/error state in hooks
+- NEVER put API call logic inside a component body — use `src/services/`
+- NEVER use `localStorage` for JWTs — use `sessionStorage` or Electron secure storage
+
+## Naming Conventions
+- Components: `PascalCase` (e.g., `CommandBar`, `AuthPage`)
+- Hooks: `camelCase` prefixed with `use` (e.g., `useCommand`, `useAuthStore`)
+- Services: `camelCase` + `Service` suffix (e.g., `authService`, `commandService`)
+- Constants: `UPPER_SNAKE_CASE`
+- CSS classes: `kebab-case`
+
+## Code Quality
+- All exported functions must have JSDoc comments
+- No `console.log` in production code — use `console.warn` / `console.error` only
+- Prefer named exports over default exports for components
+- Run `npm run lint` before every commit (enforced by Husky)
+- All new components need a corresponding `.test.jsx` file
+
+## API Calls
+- ALL API calls go through `src/services/apiClient.js` (Axios instance with JWT interceptors)
+- Handle loading/error states explicitly in every async operation
+- Never expose raw Axios errors to the UI — map to user-friendly messages
+
+## IPC (Electron)
+- Renderer process NEVER uses Node.js directly
+- All main-process calls go through `window.slashAI.*` (contextBridge)
+- Only whitelisted channels in `preload.js` are allowed
+- Add new channels to BOTH the whitelist AND `ipc/` handler file
+
+## Performance
+- Lazy-load page components with `React.lazy` + `Suspense`
+- Memoize expensive computations with `useMemo`
+- Stable callback references with `useCallback` where passed as props
+- Virtualize lists over 50 items (use `react-virtual` or similar)

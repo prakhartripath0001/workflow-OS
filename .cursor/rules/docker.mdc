@@ -1,0 +1,75 @@
+---
+description: Docker and containerization standards for SlashAI
+globs: ["**/Dockerfile", "**/docker-compose*.yml", "**/.dockerignore"]
+alwaysApply: true
+---
+
+# Docker Engineering Standards
+
+## Dockerfile Best Practices
+
+### Multi-stage builds (mandatory for all services)
+```dockerfile
+# Stage 1: Build — fat image with all tools
+FROM maven:3.9-eclipse-temurin-17 AS builder
+# ... build steps
+
+# Stage 2: Runtime — minimal image
+FROM eclipse-temurin:17-jre-alpine AS runtime
+# ONLY copy the built artifact
+COPY --from=builder /app/target/*.jar /app/app.jar
+```
+
+### Security
+- NEVER run as root: always add `USER 1000:1000` before `CMD`
+- NEVER use `latest` tag for base images — pin to specific version (e.g., `17-jre-alpine`)
+- NEVER put secrets in `ENV` or `ARG` — inject at runtime via docker-compose env
+- Use `.dockerignore` to exclude: `node_modules/`, `target/`, `.env`, `.git/`
+
+### Layer Caching (performance)
+- Copy dependency manifests BEFORE source code to maximize cache hits:
+```dockerfile
+# Backend
+COPY pom.xml .
+RUN mvn dependency:go-offline -q   # ← cached if pom.xml unchanged
+COPY src/ src/
+RUN mvn package -DskipTests
+
+# Frontend
+COPY package*.json ./
+RUN npm ci                          # ← cached if package-lock.json unchanged
+COPY . .
+RUN npm run build
+```
+
+### Health Checks (required on all services)
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 45s
+```
+
+## Docker Compose Structure
+- `docker-compose.yml` — production-safe, no dev overrides
+- `docker-compose.override.yml` — auto-merged in dev: Adminer, debug ports, volume mounts
+- Use named volumes for all persistent data (PostgreSQL)
+- Use named bridge networks — never use `network_mode: host`
+- All services define `depends_on.condition: service_healthy`
+
+## Image Naming
+- GHCR: `ghcr.io/{owner}/slashai-{service}:{tag}`
+- Tags: `latest` (main), `develop` (staging), `{sha}` (traceability)
+
+## Resource Limits (Production)
+```yaml
+deploy:
+  resources:
+    limits:
+      memory: 512m
+      cpus: '0.5'
+    reservations:
+      memory: 256m
+```

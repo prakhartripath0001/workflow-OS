@@ -1,0 +1,68 @@
+---
+description: AI workflow and slash command architecture rules
+globs: ["backend/src/**/ai/**", "backend/src/**/command/**", "frontend/src/services/commandService.js"]
+alwaysApply: true
+---
+
+# AI Workflow Architecture Rules
+
+## Intent Recognition Pipeline
+```
+User Input ("/gmail compose to:foo@bar.com")
+  → IntentRecognitionService.parse()
+  → ParsedIntent { command, action, params, confidence }
+  → CommandRouter.route(intent)
+  → ConcreteCommandHandler.execute(intent, userId)
+  → CommandExecutionResponse
+```
+
+## Command Handler Pattern (Strategy)
+- Each slash command is a Spring `@Component` implementing `CommandHandler` interface
+- CommandRouter uses a `Map<String, CommandHandler>` keyed by command name
+- New commands: implement `CommandHandler`, annotate with `@Component("gmail")` → auto-registered
+- Example:
+```java
+public interface CommandHandler {
+    String getCommandName();
+    CommandExecutionResponse handle(ParsedIntent intent, Long userId);
+}
+
+@Component
+@RequiredArgsConstructor
+public class GmailCommandHandler implements CommandHandler {
+    @Override
+    public String getCommandName() { return "gmail"; }
+    @Override
+    public CommandExecutionResponse handle(ParsedIntent intent, Long userId) { ... }
+}
+```
+
+## Intent Confidence Thresholds
+- confidence ≥ 0.85: execute immediately
+- confidence 0.50–0.84: execute with a confirmation prompt to user
+- confidence < 0.50: respond with "Did you mean...?" suggestions
+- confidence = 0.0 (unknown command): return available commands list
+
+## AI Upgrade Path (v1 → v2)
+- v1 (current): Rule-based regex parser in `IntentRecognitionService`
+- v2 (planned): Replace with OpenAI function calling or local Ollama model
+- v3 (future): Fine-tuned model on user command history
+- Keep the `IntentRecognitionService` interface stable — implementation is swappable
+
+## Command Execution Logging
+- Every command execution is logged to `command_executions` table (Flyway V2)
+- Log: userId, rawInput, parsedIntent (JSONB), status, executionMs, result
+- This data is the foundation for AI personalization in v2
+
+## Integration Handler Rules
+- Gmail/GitHub integrations store OAuth tokens in `integration_tokens` table
+- Token refresh is handled transparently in the integration service layer
+- Never call external APIs synchronously from the command execution path — use async where possible
+- Rate limit integration calls per user (prevent abuse of OAuth tokens)
+
+## Frontend Command Bar Rules
+- Debounce autocomplete suggestions: 300ms after last keystroke
+- Show command suggestions when input starts with '/'
+- Keyboard shortcuts: `Cmd/Ctrl+K` to open, `Escape` to close, `Tab` to autocomplete
+- Loading state must be shown for commands taking >200ms
+- Error messages from backend must be displayed inline — never silently fail

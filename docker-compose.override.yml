@@ -1,0 +1,42 @@
+# =============================================================================
+#  docker-compose.override.yml — Development Overrides
+#  This file is automatically merged with docker-compose.yml by Docker Compose.
+#  It adds hot-reload volumes and dev-friendly settings for local development.
+#  DO NOT commit .env — only .env.example goes to version control.
+# =============================================================================
+
+version: "3.9"
+
+services:
+
+  # ── PostgreSQL: expose adminer for local DB inspection ─────────────────────
+  postgres:
+    ports:
+      - "5432:5432"  # Expose directly so tools like DBeaver can connect
+
+  adminer:
+    image: adminer:latest
+    container_name: workflowos-adminer
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    networks:
+      - workflowos-net
+    depends_on:
+      - postgres
+
+  # ── Backend: mount source for faster iteration ──────────────────────────────
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "8080:8080"
+      - "5005:5005"   # Remote debugger port (IntelliJ / VS Code)
+    volumes:
+      - ./backend/target:/app/target   # Faster rebuilds with Maven daemon
+
+  # ── Frontend: not needed in docker in dev (use npm run electron:dev) ───────
+  frontend:
+    profiles:
+      - docker-frontend  # Only start if explicitly requested with --profile

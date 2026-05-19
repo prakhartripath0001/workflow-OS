@@ -1,0 +1,48 @@
+---
+description: Security engineering standards across the entire SlashAI stack
+globs: ["**/*.java", "**/*.js", "**/*.jsx", "**/*.yml", "**/*.properties"]
+alwaysApply: true
+---
+
+# Security Standards
+
+## Authentication
+- Passwords: BCrypt only, work factor ≥ 12 — never MD5, SHA-1, or plain SHA-256
+- JWT access tokens: 15-minute expiry (`JWT_EXPIRY_MS=900000`)
+- JWT refresh tokens: 7-day expiry, stored server-side (revocable)
+- JWT secret: minimum 256-bit (32 bytes), from environment variable ONLY
+- OAuth2: use PKCE flow — never implicit grant
+- Never log tokens, passwords, or PII at any log level
+
+## API Security
+- All endpoints require authentication unless explicitly public
+- Use `@PreAuthorize` for role-based access — don't check roles in service layer
+- Rate limiting: add `bucket4j` or Spring's rate limiting for `/api/v1/auth/**`
+- CORS: restrict `allowedOrigins` to known domains — never use `*` in production
+- Input validation: use `@Valid` + Bean Validation on ALL request DTOs
+
+## Secrets Management
+- Zero secrets in source code — use environment variables or a secrets manager
+- `.env` is in `.gitignore` — only `.env.example` goes to git
+- In production: use AWS SSM Parameter Store, HashiCorp Vault, or Railway secrets
+- Rotate JWT secrets and OAuth credentials every 90 days
+
+## OWASP Top 10 Checklist
+- A01 Broken Access Control: `@PreAuthorize` on every protected endpoint
+- A02 Cryptographic Failures: BCrypt for passwords, AES-256 for token encryption at rest
+- A03 Injection: JPA parameterized queries only — no string concatenation in queries
+- A05 Security Misconfiguration: review `application-prod.properties` before every deploy
+- A06 Vulnerable Components: OWASP dependency check runs in CI (fails on CVSS ≥ 9)
+- A07 Auth Failures: lockout after 5 failed login attempts (future: add `bucket4j`)
+- A09 Logging: structured logging, never log sensitive data, audit auth events
+
+## Dependency Management
+- Run `mvn dependency:check` before merging to main
+- Dependabot alerts must be resolved within 7 days for HIGH, 24h for CRITICAL
+- Never disable OWASP check in CI — fix the vulnerability instead
+
+## Docker Security
+- Never run containers as root — use `USER 1000:1000` in Dockerfiles
+- Use minimal base images (Alpine, distroless)
+- Scan images with `docker scout` or Trivy before pushing to registry
+- Secrets: use Docker secrets or environment injection — never in Dockerfile `ENV`
