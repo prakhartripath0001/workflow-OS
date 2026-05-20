@@ -20,7 +20,7 @@ public class ApiResponse<T> {
     private final String errorCode;
     private final long timestamp;
 
-    private ApiResponse(boolean success, String message, T data, String errorCode) {
+    public ApiResponse(boolean success, String message, T data, String errorCode) {
         this.success   = success;
         this.message   = message;
         this.data      = data;
@@ -42,11 +42,11 @@ public class ApiResponse<T> {
         return new ApiResponse<>(true, "Created successfully", data, null);
     }
 
-    public static ApiResponse<Void> error(String message, String errorCode) {
+    public static <T> ApiResponse<T> error(String message, String errorCode) {
         return new ApiResponse<>(false, message, null, errorCode);
     }
 
-    public static ApiResponse<Void> error(String message) {
+    public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>(false, message, null, "INTERNAL_ERROR");
     }
 }

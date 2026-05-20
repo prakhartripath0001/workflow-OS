@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
-
-const API = 'http://localhost:8080/api/auth'
+import { loginWithPassword, registerUser, initiateOAuthLogin } from '../services/authService'
 
 /* ─── Icons ──────────────────────────────────────────────────────── */
 const IconMail = () => (
@@ -85,12 +83,10 @@ export default function AuthPage({ onAuth }) {
 
     setLoading(true)
     try {
-      const endpoint = isLogin ? `${API}/login` : `${API}/register`
-      const payload  = isLogin
-        ? { email: email.trim().toLowerCase(), password }
-        : { name: name.trim(), email: email.trim().toLowerCase(), password }
-
-      const { data } = await axios.post(endpoint, payload)
+      const normalizedEmail = email.trim().toLowerCase()
+      const data = isLogin
+        ? await loginWithPassword(normalizedEmail, password)
+        : await registerUser(normalizedEmail, password, name.trim())
 
       sessionStorage.setItem('wf_token', data.token)
       sessionStorage.setItem('wf_user',  JSON.stringify({ id: data.id, name: data.name, email: data.email }))
@@ -98,7 +94,9 @@ export default function AuthPage({ onAuth }) {
       setSuccess(isLogin ? 'Welcome back! Loading your workspace…' : 'Account created! Signing you in…')
       setTimeout(() => onAuth({ id: data.id, name: data.name, email: data.email, token: data.token }), 900)
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Something went wrong.'
+      const msg = err?.code === 'ERR_NETWORK'
+        ? 'Backend is not reachable. Start Docker services and wait for the backend to become healthy.'
+        : err?.response?.data?.message || err?.message || 'Something went wrong.'
       setError(msg)
     } finally {
       setLoading(false)
@@ -112,13 +110,7 @@ export default function AuthPage({ onAuth }) {
    * App.jsx picks those up and calls onAuth().
    */
   function openOAuth(provider) {
-    const url = `http://localhost:8080/oauth2/authorization/${provider}`
-    // In Electron, use shell.openExternal so it opens in the real browser
-    if (window.electron?.openExternal) {
-      window.electron.openExternal(url)
-    } else {
-      window.open(url, '_blank')
-    }
+    initiateOAuthLogin(provider)
     setSuccess(`Opening ${provider} login in your browser…`)
   }
 

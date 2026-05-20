@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
                         (existing, replacement) -> existing));
         log.warn("[400] Bean validation errors: {}", errors);
         return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, "Validation failed", errors, "VALIDATION_ERROR") {});
+                .body(new ApiResponse<>(false, "Validation failed", errors, "VALIDATION_ERROR"));
     }
 
     // ── Security ──────────────────────────────────────────────────────────────

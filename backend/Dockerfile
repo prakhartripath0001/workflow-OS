@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # =============================================================================
 #  Backend Dockerfile — Spring Boot (Java 17)
 #  Multi-stage: Maven build → Slim JRE runtime
@@ -8,16 +9,21 @@ FROM amazoncorretto:17-alpine AS builder
 
 WORKDIR /build
 
+# Install Maven separately so package installation is cached independently.
+RUN apk add --no-cache maven
+
 # Cache dependency layer — copy POM first
 COPY pom.xml .
 
-# Download dependencies (cached unless pom.xml changes)
-RUN apk add --no-cache maven && \
-    mvn dependency:go-offline -B
+# Download dependencies (cached unless pom.xml changes). The cache mount keeps
+# Maven artifacts across interrupted/repeated Docker builds.
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -B -ntp
 
 # Copy source and build
 COPY src/ src/
-RUN mvn clean package -DskipTests -B
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn clean package -DskipTests -B -ntp
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM amazoncorretto:17-alpine AS runtime

@@ -4,6 +4,7 @@
 // Architecture: Strategy Pattern — each command name maps to a handler bean.
 // =============================================================================
 package com.workflowos.ai.service;
+import com.workflowos.ai.model.ParsedIntent;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

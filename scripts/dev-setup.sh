@@ -65,7 +65,7 @@ success "Frontend npm install complete"
 info "Starting PostgreSQL via Docker Compose..."
 docker compose up -d postgres
 info "Waiting for PostgreSQL to be ready..."
-until docker compose exec postgres pg_isready -U slashai -d slashai >/dev/null 2>&1; do
+until docker compose exec postgres pg_isready -U "${WORKFLOWOS_POSTGRES_USER:-workflowos}" -d "${WORKFLOWOS_POSTGRES_DB:-workflowos}" >/dev/null 2>&1; do
     printf "."
     sleep 1
 done

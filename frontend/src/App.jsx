@@ -61,9 +61,6 @@ function Dashboard({ user, onLogout }) {
         <div className="dash-welcome-card glass-card">
           <h2>You're logged in!</h2>
           <p>Your Workflow OS workspace is ready. The backend is connected and your session is active.</p>
-          <p style={{ marginTop: '0.5rem', opacity: 0.5, fontSize: '0.8rem' }}>
-            Session token: {sessionStorage.getItem('wf_token')?.slice(0, 16)}…
-          </p>
         </div>
       </main>
     </div>
@@ -84,7 +81,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     const token  = params.get('wf_token')
     const id     = params.get('wf_id')
-    const name   = params.get('wf_name')?.replace(/\+/g, ' ')
+    const name   = params.get('wf_name')
     const email  = params.get('wf_email')
 
     if (token && email) {
@@ -104,7 +101,7 @@ export default function App() {
   function handleLogout() {
     const token = sessionStorage.getItem('wf_token')
     if (token) {
-      fetch('http://localhost:8080/api/auth/logout', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),

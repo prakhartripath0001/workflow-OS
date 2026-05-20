@@ -58,10 +58,8 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = getRefreshToken()
-        const { data } = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh`,
-          { refreshToken },
-        )
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+        const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken })
         setTokens(data.accessToken, data.refreshToken)
         processQueue(null, data.accessToken)
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
@@ -86,7 +84,7 @@ apiClient.interceptors.response.use(
 // For web: use sessionStorage (never localStorage for JWTs!)
 
 function getAccessToken() {
-  return sessionStorage.getItem('slashai_access_token')
+  return sessionStorage.getItem('wf_token') || sessionStorage.getItem('slashai_access_token')
 }
 
 function getRefreshToken() {
@@ -94,6 +92,7 @@ function getRefreshToken() {
 }
 
 export function setTokens(accessToken, refreshToken) {
+  sessionStorage.setItem('wf_token', accessToken)
   sessionStorage.setItem('slashai_access_token', accessToken)
   if (refreshToken) {
     sessionStorage.setItem('slashai_refresh_token', refreshToken)
@@ -101,6 +100,8 @@ export function setTokens(accessToken, refreshToken) {
 }
 
 export function clearTokens() {
+  sessionStorage.removeItem('wf_token')
+  sessionStorage.removeItem('wf_user')
   sessionStorage.removeItem('slashai_access_token')
   sessionStorage.removeItem('slashai_refresh_token')
 }

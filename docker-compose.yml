@@ -3,8 +3,6 @@
 #  Services: postgres | backend | frontend
 # =============================================================================
 
-version: "3.9"
-
 services:
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -15,9 +13,9 @@ services:
     container_name: workflowos-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       ${POSTGRES_DB:-workflowos}
-      POSTGRES_USER:     ${POSTGRES_USER:-workflowos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workflowos}
+      POSTGRES_DB:       ${WORKFLOWOS_POSTGRES_DB:-workflowos}
+      POSTGRES_USER:     ${WORKFLOWOS_POSTGRES_USER:-workflowos}
+      POSTGRES_PASSWORD: ${WORKFLOWOS_POSTGRES_PASSWORD:-workflowos}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -25,7 +23,7 @@ services:
     networks:
       - workflowos-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workflowos} -d ${POSTGRES_DB:-workflowos}"]
+      test: ["CMD-SHELL", "pg_isready -U ${WORKFLOWOS_POSTGRES_USER:-workflowos} -d ${WORKFLOWOS_POSTGRES_DB:-workflowos}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,9 +39,9 @@ services:
     container_name: workflowos-backend
     restart: unless-stopped
     environment:
-      DB_URL:      jdbc:postgresql://postgres:5432/${POSTGRES_DB:-workflowos}
-      DB_USERNAME: ${POSTGRES_USER:-workflowos}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-workflowos}
+      DB_URL:      jdbc:postgresql://postgres:5432/${WORKFLOWOS_POSTGRES_DB:-workflowos}
+      DB_USERNAME: ${WORKFLOWOS_POSTGRES_USER:-workflowos}
+      DB_PASSWORD: ${WORKFLOWOS_POSTGRES_PASSWORD:-workflowos}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
     ports:
       - "${BACKEND_PORT:-8080}:8080"

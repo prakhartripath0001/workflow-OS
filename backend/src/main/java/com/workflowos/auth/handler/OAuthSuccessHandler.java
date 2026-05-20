@@ -81,9 +81,11 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl)
             .queryParam("wf_token",  token)
             .queryParam("wf_id",     user.getId())
-            .queryParam("wf_name",   encodeParam(user.getName()))
-            .queryParam("wf_email",  encodeParam(user.getEmail()))
-            .build().toUriString();
+            .queryParam("wf_name",   user.getName())
+            .queryParam("wf_email",  user.getEmail())
+            .build()
+            .encode()
+            .toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
@@ -139,7 +141,4 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         return parts[parts.length - 1];
     }
 
-    private static String encodeParam(String value) {
-        return value == null ? "" : value.replace(" ", "+");
-    }
 }

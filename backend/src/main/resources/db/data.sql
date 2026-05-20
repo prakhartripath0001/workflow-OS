@@ -14,7 +14,7 @@ INSERT INTO users (id, name, email, password_hash, provider, avatar_url) VALUES
     'a1b2c3d4-0001-0001-0001-000000000001',
     'Alice Johnson',
     'alice@workflowos.dev',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2a$10$WtDpLUO4NVilu61Dmlvrz.yGK6yGXKKQCqeWmptkN2axwpX5FR8OW',
     'local',
     'https://api.dicebear.com/8.x/avataaars/svg?seed=alice'
 ),
@@ -22,11 +22,20 @@ INSERT INTO users (id, name, email, password_hash, provider, avatar_url) VALUES
     'a1b2c3d4-0002-0002-0002-000000000002',
     'Bob Martinez',
     'bob@workflowos.dev',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2a$10$WtDpLUO4NVilu61Dmlvrz.yGK6yGXKKQCqeWmptkN2axwpX5FR8OW',
     'local',
     'https://api.dicebear.com/8.x/avataaars/svg?seed=bob'
 )
 ON CONFLICT (id) DO NOTHING
+^^
+
+-- Backfill demo auth fields for databases created before password auth existed.
+UPDATE users
+SET
+    password_hash = '$2a$10$WtDpLUO4NVilu61Dmlvrz.yGK6yGXKKQCqeWmptkN2axwpX5FR8OW',
+    provider = 'local',
+    provider_id = NULL
+WHERE email IN ('alice@workflowos.dev', 'bob@workflowos.dev')
 ^^
 
 -- ─── Workflows ────────────────────────────────────────────────────────────────
@@ -120,4 +129,14 @@ INSERT INTO workflow_tasks (id, workflow_id, title, description, status, positio
     'TODO', 1
 )
 ON CONFLICT (id) DO NOTHING
+^^
+
+-- ─── Commands ────────────────────────────────────────────────────────────────
+INSERT INTO commands (name, description, category, requires_auth, is_active) VALUES
+    ('gmail',     'Manage Gmail — compose, read, search emails',   'communication', TRUE,  TRUE),
+    ('github',    'Interact with GitHub — PRs, issues, repos',     'dev',           TRUE,  TRUE),
+    ('summarize', 'AI-powered text summarization',                  'productivity',  FALSE, TRUE),
+    ('remind',    'Set smart reminders and follow-ups',             'productivity',  FALSE, TRUE),
+    ('search',    'Search across all connected integrations',       'productivity',  FALSE, TRUE)
+ON CONFLICT (name) DO NOTHING
 ^^

@@ -47,6 +47,32 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ^^
 
+-- Upgrade existing local databases created by older schema versions.
+ALTER TABLE IF EXISTS users
+    ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS provider auth_provider NOT NULL DEFAULT 'local',
+    ADD COLUMN IF NOT EXISTS provider_id VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS avatar_url TEXT
+^^
+
+ALTER TABLE IF EXISTS users
+    ALTER COLUMN provider SET DEFAULT 'local',
+    ALTER COLUMN provider SET NOT NULL
+^^
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'uq_users_provider'
+          AND conrelid = 'users'::regclass
+    ) THEN
+        ALTER TABLE users
+            ADD CONSTRAINT uq_users_provider UNIQUE (provider, provider_id);
+    END IF;
+END $$
+^^
+
 COMMENT ON TABLE  users                  IS 'Application users'
 ^^
 COMMENT ON COLUMN users.email            IS 'Unique email address used for login'
@@ -180,4 +206,44 @@ DO $$ BEGIN
         BEFORE UPDATE ON workflow_tasks
         FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$
+^^
+
+-- =============================================================================
+--  TABLE: commands
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS commands (
+    id              BIGSERIAL    PRIMARY KEY,
+    name            VARCHAR(100) NOT NULL UNIQUE,
+    description     VARCHAR(500),
+    category        VARCHAR(100),
+    is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    requires_auth   BOOLEAN      NOT NULL DEFAULT FALSE,
+    icon_url        VARCHAR(1024),
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+)
+^^
+
+-- =============================================================================
+--  TABLE: command_executions
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS command_executions (
+    id              BIGSERIAL    PRIMARY KEY,
+    user_id         UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    command_name    VARCHAR(100) NOT NULL,
+    raw_input       TEXT         NOT NULL,
+    parsed_intent   JSONB,
+    status          VARCHAR(50)  NOT NULL DEFAULT 'PENDING',
+    result          JSONB,
+    error_message   TEXT,
+    execution_ms    INTEGER,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+)
+^^
+
+-- ─── Indexes ────────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_command_executions_user_id    ON command_executions (user_id)
+^^
+CREATE INDEX IF NOT EXISTS idx_command_executions_created_at ON command_executions (created_at DESC)
+^^
+CREATE INDEX IF NOT EXISTS idx_command_executions_status     ON command_executions (status)
 ^^

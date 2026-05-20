@@ -1,21 +1,22 @@
 package com.workflowos.ai.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Collections;
 import java.util.Map;
 
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @ToString
 public class ParsedIntent {
-    private final String command;
-    private final String action;
-    private final Map<String, String> params;
-    private final String rawInput;
-    private final double confidence;
+    private String command;
+    private String action;
+    private Map<String, String> params;
+    private String rawInput;
+    private double confidence;
 
     public boolean isKnown() {
         return confidence >= 0.5;

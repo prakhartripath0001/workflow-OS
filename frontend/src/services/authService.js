@@ -9,8 +9,8 @@ import apiClient, { setTokens, clearTokens } from './apiClient'
  * Returns tokens and user profile.
  */
 export async function loginWithPassword(email, password) {
-  const { data } = await apiClient.post('/api/v1/auth/login', { email, password })
-  setTokens(data.accessToken, data.refreshToken)
+  const { data } = await apiClient.post('/api/auth/login', { email, password })
+  setTokens(data.token)
   return data
 }
 
@@ -18,11 +18,12 @@ export async function loginWithPassword(email, password) {
  * Register a new local account.
  */
 export async function registerUser(email, password, displayName) {
-  const { data } = await apiClient.post('/api/v1/auth/register', {
+  const { data } = await apiClient.post('/api/auth/register', {
     email,
     password,
-    displayName,
+    name: displayName,
   })
+  setTokens(data.token)
   return data
 }
 
@@ -31,7 +32,8 @@ export async function registerUser(email, password, displayName) {
  */
 export async function logout() {
   try {
-    await apiClient.post('/api/v1/auth/logout')
+    const token = sessionStorage.getItem('wf_token')
+    await apiClient.post('/api/auth/logout', { token })
   } finally {
     clearTokens()
     // Also notify Electron main process if running in desktop mode
@@ -45,7 +47,7 @@ export async function logout() {
  * Get the currently authenticated user's profile.
  */
 export async function getCurrentUser() {
-  const { data } = await apiClient.get('/api/v1/auth/me')
+  const { data } = await apiClient.get('/api/auth/me')
   return data
 }
 
