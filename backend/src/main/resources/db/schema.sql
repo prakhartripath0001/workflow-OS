@@ -247,3 +247,87 @@ CREATE INDEX IF NOT EXISTS idx_command_executions_created_at ON command_executio
 ^^
 CREATE INDEX IF NOT EXISTS idx_command_executions_status     ON command_executions (status)
 ^^
+
+-- =============================================================================
+--  TABLE: extensions / installed_extensions
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS extensions (
+    id             VARCHAR(120) PRIMARY KEY,
+    name           VARCHAR(180) NOT NULL,
+    version        VARCHAR(40)  NOT NULL,
+    description    VARCHAR(500),
+    publisher_id   VARCHAR(120),
+    entrypoint     VARCHAR(300) NOT NULL,
+    permissions    JSONB,
+    manifest       JSONB,
+    signature      VARCHAR(512),
+    is_verified    BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+)
+^^
+
+CREATE TABLE IF NOT EXISTS installed_extensions (
+    id            BIGSERIAL PRIMARY KEY,
+    user_id       UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    extension_id  VARCHAR(120) NOT NULL REFERENCES extensions(id) ON DELETE CASCADE,
+    version       VARCHAR(40)  NOT NULL,
+    enabled       BOOLEAN      NOT NULL DEFAULT TRUE,
+    installed_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_installed_extension_user UNIQUE (user_id, extension_id)
+)
+^^
+
+CREATE INDEX IF NOT EXISTS idx_installed_extensions_user_id ON installed_extensions (user_id)
+^^
+
+-- =============================================================================
+--  TABLE: oauth_tokens
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS oauth_tokens (
+    id                       BIGSERIAL PRIMARY KEY,
+    user_id                  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider                 VARCHAR(80) NOT NULL,
+    access_token_ciphertext  TEXT        NOT NULL,
+    refresh_token_ciphertext TEXT,
+    scope                    VARCHAR(1000),
+    expires_at               TIMESTAMPTZ,
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_oauth_user_provider UNIQUE (user_id, provider)
+)
+^^
+
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_user_provider ON oauth_tokens (user_id, provider)
+^^
+
+-- =============================================================================
+--  TABLE: workspace_folders / file_index_records
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS workspace_folders (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     UUID          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    path        VARCHAR(1024) NOT NULL,
+    scope       VARCHAR(80)   NOT NULL DEFAULT 'read',
+    granted_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+)
+^^
+
+CREATE TABLE IF NOT EXISTS file_index_records (
+    id                  BIGSERIAL PRIMARY KEY,
+    user_id             UUID          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    workspace_folder_id BIGINT        NOT NULL REFERENCES workspace_folders(id) ON DELETE CASCADE,
+    path                VARCHAR(1024) NOT NULL,
+    relative_path       VARCHAR(1024) NOT NULL,
+    extension           VARCHAR(40),
+    content_hash        VARCHAR(128),
+    size_bytes          BIGINT,
+    modified_at         TIMESTAMPTZ,
+    indexed_at          TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+)
+^^
+
+CREATE INDEX IF NOT EXISTS idx_workspace_folders_user_id ON workspace_folders (user_id)
+^^
+CREATE INDEX IF NOT EXISTS idx_file_index_records_folder ON file_index_records (workspace_folder_id)
+^^
+CREATE INDEX IF NOT EXISTS idx_file_index_records_user_path ON file_index_records (user_id, path)
+^^

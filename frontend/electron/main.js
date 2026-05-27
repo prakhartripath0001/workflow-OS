@@ -1,5 +1,7 @@
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, shell, ipcMain } = require('electron')
 const path = require('path')
+const { registerExtensionHandlers } = require('./ipc/extensionHandlers')
+const { registerWorkspaceHandlers } = require('./ipc/workspaceHandlers')
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
@@ -14,6 +16,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, 'preload.js'),
     },
     show: false,  // prevent white flash on load
@@ -37,9 +40,15 @@ function createWindow() {
     shell.openExternal(url)
     return { action: 'deny' }
   })
+
+  registerWorkspaceHandlers(win)
+
+  ipcMain.handle('system:get-platform', () => process.platform)
+  ipcMain.handle('system:get-app-version', () => app.getVersion())
 }
 
 app.whenReady().then(() => {
+  registerExtensionHandlers()
   createWindow()
 
   // macOS: re-create window on dock icon click

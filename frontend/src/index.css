@@ -541,3 +541,72 @@ body {
 }
 .btn-primary:hover  { opacity: 0.9; box-shadow: 0 6px 20px rgba(76,110,245,0.5); }
 .btn-primary:active { transform: scale(0.97); }
+
+.command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(4, 6, 12, 0.58);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.command-palette {
+  width: min(760px, calc(100vw - 32px));
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+  overflow: hidden;
+}
+
+.command-input {
+  width: 100%;
+  background: #0b1020;
+  color: #fff;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 1rem 1.1rem;
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.command-suggestions {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.command-suggestion {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  text-align: left;
+  cursor: pointer;
+}
+
+.command-suggestion:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.command-suggestion small {
+  color: rgba(255,255,255,0.52);
+}
+
+.command-result {
+  margin: 0;
+  max-height: 240px;
+  overflow: auto;
+  background: #070b14;
+  color: #d9e2ff;
+  padding: 1rem;
+  font-size: 0.78rem;
+}

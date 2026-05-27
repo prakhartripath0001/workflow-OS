@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import AuthPage from './pages/AuthPage'
+import CommandPalette from './components/CommandPalette'
 import './index.css'
 
 /* ── Simple in-memory dashboard placeholder ── */
@@ -113,5 +114,10 @@ export default function App() {
   }
 
   if (!user) return <AuthPage onAuth={handleAuth} />
-  return <Dashboard user={user} onLogout={handleLogout} />
+  return (
+    <>
+      <Dashboard user={user} onLogout={handleLogout} />
+      <CommandPalette />
+    </>
+  )
 }

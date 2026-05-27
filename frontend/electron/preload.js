@@ -37,6 +37,11 @@ const VALID_INVOKE_CHANNELS = [
   'system:get-app-version',
   'keychain:get-secret',
   'keychain:set-secret',
+  'workspace:grant-folder',
+  'workspace:list-folders',
+  'workspace:scan',
+  'workspace:read-file',
+  'extensions:list-installed',
 ]
 
 // ─── Expose to renderer via window.slashAI ────────────────────────────────────
